@@ -1,6 +1,6 @@
 pipeline {
 
-    agent none
+    agent any
 
     environment {
         APP_NAME = "lab10monitoreo"
