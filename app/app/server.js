@@ -1,14 +1,21 @@
 const express = require("express");
-const client = require("prom-client");
 const { version } = require("./version");
+const {
+  register,
+  httpRequestCounter,
+  httpRequestDuration
+} = require("./metrics");
 
 const app = express();
-const register = new client.Registry();
-
-client.collectDefaultMetrics({ register });
 
 app.get("/", (req, res) => {
+  const end = httpRequestDuration.startTimer();
+
+  httpRequestCounter.inc();
+
   res.send(`App running - Version: ${version}`);
+
+  end();
 });
 
 app.get("/metrics", async (req, res) => {
