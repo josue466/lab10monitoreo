@@ -9,7 +9,7 @@ pipeline {
 
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/tu-repo/devops-lab.git'
+                git 'https://github.com/lesantivanez/lab10monitoreo.git'
             }
         }
 
