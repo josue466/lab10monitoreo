@@ -15,47 +15,57 @@ pipeline {
 
     stages {
 
+        // 🔹 Limpieza del workspace
         stage('Clean Workspace') {
             steps {
                 cleanWs()
             }
         }
 
+        // 🔹 Checkout simple y confiable
         stage('Checkout') {
             steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: "*/${BRANCH}"]],
-                    extensions: [
-                        [$class: 'WipeWorkspace'],
-                        [$class: 'CleanBeforeCheckout']
-                    ],
-                    userRemoteConfigs: [[url: "${REPO_URL}"]]
-                ])
+                git branch: "${BRANCH}", url: "${REPO_URL}"
             }
         }
 
-        stage('Install & Test') {
+        // 🔹 Verificar que el repo se descargó correctamente
+        stage('Verify Checkout') {
             steps {
                 sh '''
-                echo "=== DEBUG ==="
-                ls -la
-                
-                docker run --rm \
-                  -v $WORKSPACE:/app \
-                  -w /app/app \
-                  node:18 \
-                  sh -c "ls -la && npm install && npm test"
+                echo "=== WORKSPACE DESPUÉS DEL CHECKOUT ==="
+                ls -R
                 '''
             }
         }
 
+        // 🔹 Instalar dependencias y correr tests dentro de Docker Node
+        stage('Install & Test') {
+            steps {
+                sh '''
+                docker run --rm \
+                  -v $WORKSPACE:/app \
+                  -w /app \
+                  node:18 \
+                  sh -c "
+                    echo '📂 Contenido de /app:' && ls -la && \
+                    if [ ! -f package.json ]; then
+                        echo '❌ package.json no encontrado, abortando...' && exit 1
+                    fi && \
+                    npm install && npm test
+                  "
+                '''
+            }
+        }
+
+        // 🔹 Build de la imagen Docker con versionado automático
         stage('Build Image') {
             steps {
                 sh "docker build -t ${APP_NAME}:${VERSION} ."
             }
         }
 
+        // 🔹 Deploy usando Docker Compose
         stage('Deploy') {
             steps {
                 sh 'docker compose down || true'
@@ -63,6 +73,7 @@ pipeline {
             }
         }
 
+        // 🔹 Health Check para asegurar que la app está corriendo
         stage('Health Check') {
             steps {
                 sh '''
