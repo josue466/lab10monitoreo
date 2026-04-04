@@ -49,39 +49,26 @@ pipeline {
             }
         }
 
-        stage('Prepare & Deploy Compose') {
+        stage('Deploy Monitoring Stack') {
             steps {
                 echo "📂 Preparando docker-compose.yml y desplegando stack..."
-                sh """
-                # Crear carpeta app si no existe
-                mkdir -p ${WORKSPACE}/app
+                dir('app') {
+                    sh """
+                    # Asegurar que docker-compose.yml existe
+                    if [ ! -f docker-compose.yml ]; then
+                        echo "❌ docker-compose.yml no encontrado en app/, abortando..." && exit 1
+                    fi
 
-                # Asegurar que docker-compose.yml esté en app/
-                if [ -f ${WORKSPACE}/docker-compose.yml ]; then
-                    cp ${WORKSPACE}/docker-compose.yml ${WORKSPACE}/app/
-                elif [ -f ${WORKSPACE}/app/docker-compose.yml ]; then
-                    echo "✅ docker-compose.yml ya existe en app/"
-                else
-                    echo "❌ docker-compose.yml no encontrado, abortando..." && exit 1
-                fi
+                    echo "📂 Contenido de app/:"
+                    ls -la
 
-                # Debug: listar contenido
-                echo "📂 Contenido de app/"
-                ls -la ${WORKSPACE}/app
+                    # Detener cualquier stack previo
+                    docker compose down || true
 
-                # Ejecutar Docker Compose dentro del contenedor montando solo app/
-                docker run --rm \
-                    -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v ${WORKSPACE}/app:/app \
-                    -w /app \
-                    docker/compose:latest down || true
-
-                docker run --rm \
-                    -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v ${WORKSPACE}/app:/app \
-                    -w /app \
-                    docker/compose:latest up -d
-                """
+                    # Levantar stack Node + Prometheus + Grafana
+                    docker compose up -d
+                    """
+                }
             }
         }
 
