@@ -26,7 +26,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Construyendo imagen Docker de la app..."
-                // Cambiamos al directorio 'app' donde está el Dockerfile
                 dir('app') {
                     sh "docker build -t ${APP_NAME}:${APP_VERSION} ."
                 }
@@ -47,6 +46,21 @@ pipeline {
                     '
                     """
                 }
+            }
+        }
+
+        stage('Setup Docker Compose') {
+            steps {
+                echo "🛠 Verificando Docker Compose..."
+                sh '''
+                if ! command -v docker-compose &> /dev/null
+                then
+                    echo "🚀 Instalando Docker Compose..."
+                    sudo curl -L "https://github.com/docker/compose/releases/download/v2.21.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                    sudo chmod +x /usr/local/bin/docker-compose
+                fi
+                docker-compose --version
+                '''
             }
         }
 
