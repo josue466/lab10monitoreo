@@ -56,8 +56,8 @@ pipeline {
                 dir('app') {
                     sh """
                     export APP_VERSION=${APP_VERSION}
-                    docker compose down || true
-                    docker compose up -d
+                    docker-compose down || true
+                    docker-compose up -d
                     """
                 }
             }
