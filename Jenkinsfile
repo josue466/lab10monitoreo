@@ -2,6 +2,10 @@ pipeline {
 
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+    }
+
     environment {
         APP_NAME = "lab10monitoreo"
         VERSION = "1.0.${BUILD_NUMBER}"
@@ -11,9 +15,23 @@ pipeline {
 
     stages {
 
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Checkout') {
             steps {
-                git branch: "${BRANCH}", url: "${REPO_URL}"
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${BRANCH}"]],
+                    extensions: [
+                        [$class: 'WipeWorkspace'],
+                        [$class: 'CleanBeforeCheckout']
+                    ],
+                    userRemoteConfigs: [[url: "${REPO_URL}"]]
+                ])
             }
         }
 
@@ -22,9 +40,14 @@ pipeline {
                 sh '''
                 docker run --rm \
                   -v $WORKSPACE:/app \
-                  -w /app/app \
+                  -w /app \
                   node:18 \
-                  sh -c "find /app -name package.json && cd $(dirname $(find /app -name package.json | head -n 1)) && npm install && npm test"
+                  sh -c "
+                    DIR=$(dirname $(find . -name package.json | head -n 1)) && \
+                    cd $DIR && \
+                    npm install && \
+                    npm test
+                  "
                 '''
             }
         }
@@ -46,7 +69,7 @@ pipeline {
             steps {
                 sh '''
                 sleep 5
-                curl -f http://localhost:3000
+                curl -f http://localhost:3000 || exit 1
                 '''
             }
         }
