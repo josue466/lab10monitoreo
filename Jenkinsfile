@@ -39,10 +39,9 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker run --rm \\
-                        -v \$WORKSPACE/app:/app \\
-                        -w /app \\
-                        node:18 sh -c '
+                    docker run --rm -w /app node:18 sh -c '
+                        mkdir -p /app &&
+                        cp -r $WORKSPACE/app/* /app/ &&
                         echo "📂 Contenido de /app:" && ls -la &&
                         if [ ! -f package.json ]; then
                             echo "❌ package.json no encontrado, abortando..." && exit 1
