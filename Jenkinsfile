@@ -26,33 +26,40 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "🐳 Construyendo imagen Docker de la app..."
-                sh "docker build -t ${APP_NAME}:${APP_VERSION} ."
+                // Cambiamos al directorio 'app' donde está el Dockerfile
+                dir('app') {
+                    sh "docker build -t ${APP_NAME}:${APP_VERSION} ."
+                }
             }
         }
 
         stage('Run Tests') {
             steps {
                 echo "🧪 Ejecutando tests dentro del contenedor..."
-                sh """
-                docker run --rm -w /app -e APP_VERSION=${APP_VERSION} ${APP_NAME}:${APP_VERSION} sh -c '
-                    echo "📂 Contenido de /app:" && ls -la &&
-                    if [ ! -f package.json ]; then
-                        echo "❌ package.json no encontrado, abortando..." && exit 1
-                    fi &&
-                    npm test
-                '
-                """
+                dir('app') {
+                    sh """
+                    docker run --rm -w /app -e APP_VERSION=${APP_VERSION} ${APP_NAME}:${APP_VERSION} sh -c '
+                        echo "📂 Contenido de /app:" && ls -la &&
+                        if [ ! -f package.json ]; then
+                            echo "❌ package.json no encontrado, abortando..." && exit 1
+                        fi &&
+                        npm test
+                    '
+                    """
+                }
             }
         }
 
         stage('Deploy Monitoring Stack') {
             steps {
                 echo "🚀 Desplegando Node app, Prometheus y Grafana con Docker Compose..."
-                sh """
-                export APP_VERSION=${APP_VERSION}
-                docker compose down || true
-                docker compose up -d
-                """
+                dir('app') {
+                    sh """
+                    export APP_VERSION=${APP_VERSION}
+                    docker compose down || true
+                    docker compose up -d
+                    """
+                }
             }
         }
 
