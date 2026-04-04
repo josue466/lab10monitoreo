@@ -8,7 +8,6 @@ pipeline {
     environment {
         APP_NAME = "lab10monitoreo"
         VERSION = "1.0.${BUILD_NUMBER}"
-        # URL de tu repo si lo necesitas
         REPO_URL = "https://github.com/lesantivanez/lab10monitoreo.git"
         BRANCH = "main"
     }
