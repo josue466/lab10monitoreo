@@ -32,16 +32,16 @@ pipeline {
                     // Usamos docker para correr Node dentro del contenedor
                     sh """
                         docker run --rm \
-                        -v \$WORKSPACE:/workspace \
+                        -v /var/jenkins_home/workspace/monitoreo:/workspace \
                         -w /workspace/app \
-                        node:18 sh -c '
-                            echo "📂 Contenido de /workspace/app:" && ls -la &&
+                        node:18 sh -c "
+                            echo '📂 Contenido de /workspace/app:' && ls -la &&
                             if [ ! -f package.json ]; then
-                                echo "❌ package.json no encontrado, abortando..." && exit 1
+                                echo '❌ package.json no encontrado, abortando...' && exit 1
                             fi &&
                             npm install &&
                             npm test
-                        '
+                        "
                     """
                 }
             }
