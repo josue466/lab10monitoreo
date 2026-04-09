@@ -65,8 +65,13 @@ pipeline {
                     # Detener stack previo
                     docker-compose down || true
 
-                    # Levantar stack Node + Prometheus + Grafana
+                    # ✅ Pasar ruta absoluta para que Docker host pueda resolver el volumen
+                    PROMETHEUS_CONFIG_PATH=\$(pwd)/prometheus_config/prometheus.yml \
                     docker-compose up -d
+
+                    # Ver logs de prometheus para confirmar que levantó
+                    sleep 3
+                    docker logs prometheus || true
                     """
                 }
             }
