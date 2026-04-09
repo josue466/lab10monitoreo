@@ -18,7 +18,7 @@ pipeline {
                 echo "🔄 Clonando código..."
                 checkout([$class: 'GitSCM',
                     branches: [[name: 'main']],
-                    userRemoteConfigs: [[url: 'https://github.com/lesantivanez/lab10monitoreo.git']]
+                    userRemoteConfigs: [[url: 'https://github.com/josue466/lab10monitoreo.git']]
                 ])
             }
         }
